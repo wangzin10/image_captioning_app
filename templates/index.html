@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📸 Image Captioning App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 1rem;
+      background: #f4f4f4;
+      color: #333;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 1rem;
+    }
+
+    .camera-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    video, canvas {
+      width: 100%;
+      max-width: 320px;
+      height: auto;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 0.7rem 1.2rem;
+      font-size: 1rem;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 1rem;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .caption-box {
+      text-align: left;
+      background-color: #fff;
+      padding: 1rem;
+      border-radius: 10px;
+      max-width: 600px;
+      margin: 0 auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    audio {
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 500px) {
+      button {
+        width: 90%;
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📸 Real-time Image Captioning + Tiếng Việt + Âm thanh</h2>
+
+  <div class="camera-container">
+    <video id="video" autoplay playsinline></video>
+    <button id="switchCamera">🔄 Chuyển Camera</button>
+    <button id="snap">📷 Chụp ảnh</button>
+    <canvas id="canvas" style="display: none;"></canvas>
+  </div>
+
+  <div class="caption-box">
+    <h3>🇬🇧 Caption (EN):</h3>
+    <p id="caption-en">...</p>
+    <h3>🇻🇳 Dịch tiếng Việt:</h3>
+    <p id="caption-vi">...</p>
+    <audio id="audio" controls style="display: none;"></audio>
+  </div>
+
+  <script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const context = canvas.getContext("2d");
+    const snapBtn = document.getElementById("snap");
+    const switchBtn = document.getElementById("switchCamera");
+
+    let currentFacingMode = "environment";
+    let currentStream = null;
+
+    async function startCamera(facingMode) {
+      if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { exact: facingMode } },
+          audio: false
+        });
+        currentStream = stream;
+        video.srcObject = stream;
+      } catch (err) {
+        alert("Không thể mở camera: " + err.message);
+      }
+    }
+
+    // Mặc định mở camera sau
+    startCamera(currentFacingMode);
+
+    // Nút chuyển camera
+    switchBtn.onclick = () => {
+      currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
+      startCamera(currentFacingMode);
+    };
+
+    snapBtn.onclick = () => {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob((blob) => {
+        const formData = new FormData();
+        formData.append("image", blob, "frame.jpg");
+
+        fetch("/caption", { method: "POST", body: formData })
+          .then((res) => res.json())
+          .then((data) => {
+            document.getElementById("caption-en").innerText = data.caption_en;
+            document.getElementById("caption-vi").innerText = data.caption_vi;
+            const audio = document.getElementById("audio");
+            audio.src = data.audio_url + '?t=' + new Date().getTime();
+            audio.style.display = "block";
+            audio.pause();
+            audio.currentTime = 0;
+            audio.play();
+          });
+      }, "image/jpeg");
+    };
+  </script>
+
+</body>
+</html>
