@@ -7,7 +7,10 @@ This project implements a real-time Image Captioning system using a Vision Trans
 - Real-time caption rendering on the frontend after prediction.
 - TTS (Text-To-Speech) support for audio output of generated captions.
 ## Model Architecture
+<img src="https://github.com/user-attachments/assets/38769c0a-fe4a-405d-a730-459d08a2aa6c" width="400" />
+
 The model is a Vision-Language Transformer that consists of:
+
 **🔷Encoder – Vision Transformer (ViT)**
 - The image is divided into patches (e.g., 16×16), each of which is linearly embedded.
 - A [CLS] token is prepended, and positional embeddings are added.
@@ -38,9 +41,70 @@ The output [CLS] embedding acts as the visual representation for the decoder.
 ## Training & Results
 Trained for 10 epochs with:
 - Optimizer: AdamW
-- Loss: Cross-Entropy Loss
+- Loss: Categorical cross-entropy
 - Batch size: 32
-- Learning rate: 5e-5
+- Learning rate: 1e-4
+<img src="https://github.com/user-attachments/assets/869e3605-e095-4035-b02e-1d24c8c05869" width="500" />
+
+Loss plot
+
+
+<img src="https://github.com/user-attachments/assets/e22b49c7-8da1-448e-ad11-787a066e3cb0" width="400" />
+<img src="https://github.com/user-attachments/assets/04a387d4-c5f9-4b05-9cd9-ea7c91c1706a" width="390" />
+
+## Model Demo
+
+The image below shows how the Image Captioning model performs on a test image:
+
+<img src="https://github.com/user-attachments/assets/c7b7dd17-d9de-469b-be5c-6cf0930e58bc" width="400" />
+
+<img src="https://github.com/user-attachments/assets/d8cbe93b-0171-437b-8501-aac4a38de139" width="400" />
+
+
 ## Web Interface
+
+Built using Flask for backend and HTML/JS for frontend.
+
+Main features:
+- Capture image from webcam
+- Send image to backend API (/caption)
+- Display generated caption
+- Optionally speak the caption via TTS
 ## Run Locally
+1. Clone the Repository
+
+```bash
+git clone https://github.com/wangzin10/image_captioning_app.git
+cd image-captioning-app
+```
+
+2. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+
+3. Start the Web App
+
+```bash
+python app.py
+```
+
+4. (Optional) Expose to the Internet using ngrok
+
+Install ngrok and expose your Flask app to the internet:
+```bash
+ngrok http 5000
+```
 ## File Structure
+
+```bash
+image-captioning-app/
+├── app.py                 # Flask backend
+├── model_loader/          # VisionGPT2Model code
+├── static/                # Output audio file (generated from TTS)
+├── templates/             # HTML templates
+├── requirements.txt
+└── README.md
+```
